@@ -1,6 +1,5 @@
 # Serious-Game
 
-CREATION D’UN SERIOUS GAME
 a.	Objectif
 Création d’un jeu de simulation d’entreprise permettant d’incarner le dirigeant d’une entreprise et de prendre des décisions chaque trimestre afin de mener votre entreprise au succès dans un environnement hautement compétitif.
 
