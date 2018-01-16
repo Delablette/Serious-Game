@@ -19,8 +19,5 @@ b.	Fonctionnalités
   •	Création d’une interface permettant à chaque instant d’avoir un aperçu de la situation de votre entreprise et de ses concurrents
   •	Charger des paramètres depuis un fichier externe pour personnaliser le jeu sans en modifier le code
 
-c.	Organisation
-Le code doit être écrit en langage C et pouvoir être exécuté.
-
 
 
