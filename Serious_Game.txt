@@ -1,0 +1,605 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+typedef struct Product Product;
+typedef struct Liste Liste;
+struct Product{ //on définit un produit par un nom, un type, une gamme et un prix
+char Name[60];
+char Type[60];
+int Gamme; //le niveau de gamme est un int entre 1 et 3 (bas moyen haut)
+int Price;
+int marketing; /*publicité du produit*/
+Product *suivant;
+
+};
+
+struct Liste{ //une liste chainée d'éléments qui va permettre de créer des produits, de les supprimer ou de les modifier
+Product Produit;
+Product *premier;
+int Size_Liste;
+int Wallet; /*On commence le jeu avec un portefeuille de 100000€ */
+int appareilProductif;
+};
+
+Liste *initialisation();
+void insertion(Liste *liste);
+void choose_name (char[]);
+void choose_company(char[]);
+int choose_number_opponent(void);
+void set_Product_name (char []);
+void set_Product_Type(char Type[]);
+int set_Product_Gamme();
+int set_Product_price();
+int isEmpty (Liste *liste );
+void display_menu(Liste *liste);
+void delete_product (Liste *liste);
+void display_list_products(Liste *liste);
+void removeHead (Liste * liste);
+void adjustPrice(Liste *liste);
+void adjustMarketing (Liste *liste, int numProd, int price);
+void removeBody (Liste *liste, int numToDelete);
+char generateurLettreAleatoire();
+void randomInsertion(Liste* liste);
+void randomDelete (Liste *liste);
+Liste *RandomInitialisation (void);
+void EndRound(Liste *);
+int set_Product_marketing (void);
+void appareilProductif (Liste* liste, int prix);
+int main(void)
+{
+    srand(time(NULL));
+    char name [60];
+    char company [60];
+
+    int nbadv= 0;
+
+    printf("\nBonjour, bienvenue dans le Serious Game ! \n");
+    printf("Vous etes le chef d'entreprise et devez battre vos concurrents.\n");
+
+    choose_name(name);
+    choose_company(company);
+
+
+    printf("Bonjour %s, vous allez donc gerer votre entreprise %s \n",name, company);
+
+    nbadv = choose_number_opponent();
+
+    printf("Desormais vous allez lancer vos produits ! Excitant n'est-ce pas?\n");
+    Liste *maListe = initialisation();
+
+    int boolean = 1;
+    Liste *adv1 = RandomInitialisation();
+    Liste *adv2 = NULL;
+    Liste *adv3 = NULL;
+    if (nbadv >= 2){
+        adv2 = RandomInitialisation();
+    }
+    if (nbadv == 3){
+        adv3= RandomInitialisation();
+    }
+    do{
+    display_menu(maListe);
+    if(nbadv >= 1)
+        {printf("tour adversaire 1\n");
+        EndRound(adv1);
+        }
+    if (nbadv >= 2)
+    {
+        printf("tour adversaire 2\n");
+        EndRound(adv2);
+    }
+    if(nbadv == 3) //nbadv == 3
+        {
+            printf("tour adversaire 3\n");
+            EndRound(adv3);
+        }
+    }while(boolean=1);
+    //insertion(maListe);
+    //printf("Je viens d'ajouter un produit: %s", maListe->premier->Name);
+    return 0;
+}
+
+void choose_name (char name[]){ //Indique le nom du joueur
+
+    printf("\nIndiquez votre nom:\n");
+    scanf("%s", &name[0]);
+}
+
+void choose_company(char company[]){ // initialise le nom de l'entreprise
+
+    printf("Quel est le nom de votre entreprise?\n");
+    scanf("%s",&company[0]);}
+
+int choose_number_opponent(){ // initialise le nombre d'adversaires
+   int nbadv=0;
+   char valueEntered[60];
+
+
+    do
+    {
+       printf("Combien voulez-vous d'adversaires? (entre 1 et 3)\n");
+       scanf("%s", &valueEntered[0]);
+    } while (valueEntered[0] < 49 || valueEntered[0] > 51);
+    nbadv = atoi(valueEntered);
+    printf("Parfait, vous aurez donc %d adversaire(s). \n", nbadv);
+return nbadv;
+}
+
+void set_Product_name(char name[]){ // inititalise le nom d'un produit
+printf("Veuillez choisir le nom de votre produit:\n");
+scanf("%s", &name[0]);
+printf("Votre produit se nomme: %s\n",name);
+}
+void set_Product_Type(char Type[]){ // initialise le type de produit
+printf("Veuillez choisir le Type du produit:\n");
+scanf("%s",&Type[0]);
+printf("Le produit est de Type: %s\n", Type);
+}
+
+int set_Product_Gamme(){ //initialise la Gamme du produit
+
+int gamme=0;
+char chainentered[60];
+do{
+    printf("Indiquez la gamme du produit: (1: bas; 2: moyen; 3:eleve)\n");
+    scanf("%s", &chainentered[0]); // on rentre une chaine de characteres plutot qu'un nombre pour éviter les erreurs de l'utilisateur
+    }while(chainentered[0] < 49 || chainentered[0] > 51 ); //le principe de cette boucle est de tester un character (ne peux jamais etre considéré comme une erreur, vérifier que la valeur ascii correspond à un chiffre entre 1 et 3
+gamme = atoi(chainentered); // convertir la valeur ascii en un nombre décimal grace à la fonction atoi
+switch (gamme)
+{
+    case 1: printf("Tu as choisi du bas de gamme\n");
+    break;
+    case 2: printf("Tu as choisi du milieu de gamme\n");
+    break;
+    case 3: printf("Tu as choisi du haut de gamme\n");
+    break;
+}
+
+return gamme;
+}
+
+int set_Product_price (void){ //permet de programmer le prix d'un produit
+    int price = 0;
+    char priceEntered[60];
+    do{
+    printf("Indiquez le prix du produit:\n");
+    scanf("%s", &priceEntered[0]);
+    }while(priceEntered[0]< 48 || priceEntered[0] > 57);
+    price = atoi(priceEntered);
+    printf("Le prix est de: %d\n",price);
+    return price;
+}
+
+int set_Product_marketing (void){ //permet de programmer le marketing d'un produit
+    int marketing = 0;
+    char marketingEntered[60];
+    do{
+    printf("Indiquez le prix a investir dans le marketing du produit:\n");
+    scanf("%s", &marketingEntered[0]);
+    }while(marketingEntered[0]< 48 || marketingEntered[0] > 57);
+    marketing = atoi(marketingEntered);
+    printf("Le prix marketing est de: %d\n",marketing);
+    return marketing;
+}
+
+Liste *initialisation() //On initialise la liste en on rentre obligatoirement le premier produit.
+{
+    Liste *liste = malloc(sizeof(*liste));
+    Product *produit = malloc(sizeof(*produit));
+    if (liste == NULL || produit == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+    printf("Vous allez tout d'abord rentrer quelques informations sur votre premier produit a lancer:\n");
+    set_Product_name(produit->Name);
+    set_Product_Type(produit->Type);
+    produit->Gamme = set_Product_Gamme();
+    produit->Price =  set_Product_price();
+    produit->marketing = 0;
+    printf("Vous avez donc lance le produit: %s de Type: %s dans la gamme: %d coutant: %d\n", produit->Name, produit->Type, produit->Gamme, produit->Price);
+    produit->suivant = NULL;
+    liste->premier = produit;
+    liste->Size_Liste =1;
+    liste->Wallet = 100000; /*portefeuille initialisé a 100000€*/
+    liste->appareilProductif=0;
+    return liste;
+}
+void insertion(Liste *liste) // cette fonction sert a inserer un nouvel element dans la liste
+{
+    /* Création du nouvel élément */
+    Product *newProduct = malloc(sizeof(*newProduct));
+    if (liste == NULL || newProduct == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+    printf("Vous souhaitez lancer un nouveau produit? Parfait!\nVeuillez rentrer ces quelques informations sur le produit:\n");
+    /*Initialisation du nouveau produit à introduire à l'aide des fonctions d'initialisation:*/
+    set_Product_name(newProduct->Name);
+    set_Product_Type(newProduct->Type);
+    newProduct->Gamme = set_Product_Gamme();
+    newProduct->Price = set_Product_price();
+    newProduct->marketing=0;
+printf("Vous avez donc lance le produit: %s de Type: %s dans la gamme: %d coutant: %d\n", newProduct->Name, newProduct->Type, newProduct->Gamme, newProduct->Price);
+    /* Insertion de l'élément au début de la liste */
+    newProduct->suivant = liste->premier;
+    liste->premier = newProduct;
+    liste->Size_Liste+=1;
+}
+
+void delete_product (Liste *liste){ /*la fonction delete_product est un mauvais choix: il aurait été judicieux de ne pas demander le numero du produit à afficher dans la fonction pour pouvoir la réutiliser pour la suppression d'un produit aleatoire par l'ordinateur */
+/*Pour cette fonction on doit: appeler la liste,verifier que l'on peut supprimer un element, afficher tous les elements de la liste et faire son choix dans les elements à supprimer*/
+Product * element = liste->premier;
+char prodToDelete[60];
+int numProd = 0;
+int i=0;
+    if((liste->Size_Liste) > 1){ //la liste contient plus d'un produit
+    /*affichage des produits disponibles*/
+        display_list_products(liste);
+
+    /*on recupere le nom du produit a supprimer*/
+        do{
+        printf("Entrez le numero du produit a supprimer:\n");
+        scanf("%s",&prodToDelete[0]);
+
+        }while(prodToDelete[0] < 48 || prodToDelete[0] > 57); //a corriger pour plus tard: l'utilisateur ne peut suprimer qu'un produit entre 0 et 9...
+       numProd = atoi(prodToDelete);
+
+    if (numProd == 0){
+        removeHead(liste);
+        display_list_products(liste);
+        liste->Size_Liste -= 1; // on réduit la taille de la liste
+        printf("la liste est de: %d\n", liste->Size_Liste);
+    }
+    else if (numProd<liste->Size_Liste){
+        removeBody(liste, numProd);
+        display_list_products(liste);
+        liste->Size_Liste -= 1; // on réduit la taille de la liste
+        printf("La taille de la liste est de: %d\n", liste->Size_Liste);
+    }
+    else
+        printf("tu n'as pas rentre un nombre correct !\n");
+
+    }
+    else //la liste contient un unique produit
+        printf("Vous n'allez tout de meme pas supprimer votre seul produit sur le marche...\n");
+
+        system("pause"); // insert une pause pour eviter d'effacer la console instantanément pour voir le message renvoyé par la fonction
+}
+
+int isEmpty (Liste *liste ){ //Cette fonction sert à savoir si la liste est vide (1 vide, 0 remplie)
+  int isEmpty = 0;
+
+    if (liste->premier == NULL ){
+        isEmpty=1;
+    }
+    else isEmpty= 0;
+
+return isEmpty;
+}
+
+void display_menu(Liste *liste){
+char choice[60];
+char choice2[60];
+char choice3[60];
+int choix2;
+int choix;
+int prix=0;
+char charProduction [60];
+int priceProduction=0;
+do{
+system ("cls"); // efface la console
+printf("///Actions de debut de trimestre\\\\n\n");
+printf("1: Lancer un nouveau produit\n2: Arreter un produit\n3: Ajuster le prix d'un produit\n4: Investir dans la publicite d'un produit\n5: Investir dans appareil productif\n");
+printf("6: finir le tour\n \n 0: Quitter le jeu\n");
+printf("Quel est votre choix?\n");
+scanf("%s", &choice[0]);
+}while(choice[0] <48 || choice[0] >54);
+choix = atoi(choice);
+switch (choix) //on appelle les fonctions selon le choix de l'utilisateur
+{
+    case 1: insertion(liste);
+    break;
+    case 2: delete_product(liste);
+    break;
+    case 3: adjustPrice(liste);
+    break;
+    case 4:
+        printf("Investissement dans la publicite d'un produit:\n");
+        display_list_products(liste);
+        do{
+        printf("choisissez le produit dans lequel investir:\n");
+        scanf("%s", &choice2[0]);
+        choix2 = atoi(choice2);
+        }while(choice2[0] < 48 || choice2[0] > 57 || choix2 >= liste->Size_Liste);
+
+        do{
+        printf("choisissez prix a investir dans la publicite du produit: (etat portefeuille actuel: %d€)\n", liste->Wallet);
+        scanf("%s", &choice3[0]);
+        prix = atoi(choice3);
+        }while(choice3[0] < 48 || choice3[0] > 57 || prix> liste->Wallet);
+        printf("choix du prix de l'investissement:%d€\n", prix);
+
+        if(choix2 >= liste->Size_Liste || prix > liste->Wallet){// on ne peut jamais rentrer dans cette boucle mais elle est la au cas ou
+            /*le choix est mauvais soit a cause du nombre de la liste soit a cause du prix superieur au portefeuille disponible, on rappelle la fonction*/
+            printf("un element entre est mauvais\n");
+            system("pause");
+        }
+        else{
+            adjustMarketing (liste, choix2, prix);
+            system("pause");
+        }
+    break;
+    case 5:
+        printf("investissement dans l'appareil productif\n");
+        do{
+            printf("Indiquez le prix a investir(Portefeuille:%d€):\n", liste->Wallet);
+
+            scanf("%s",&charProduction[0]);
+            priceProduction = atoi(charProduction);
+        }while(charProduction[0] < 48 || charProduction[0] > 57 || priceProduction > liste->Wallet);
+        appareilProductif (liste, priceProduction);
+        system("pause");
+        break;
+    case 0: exit(0);
+    break;
+}
+if(choice[0] != 54){ //si le choix est different de quitter menu: on va appeler la fonction menu de nouveau pour eviter de mettre fin au tour
+    display_menu(liste);
+}
+}
+void display_list_products(Liste *liste){
+   Product *tmp = liste->premier; //produit temporaire qui va pointer sur l'élement courant a afficher
+   int i=0;
+    /*affichage des produits disponibles*/
+        printf("liste des produits disponibles:\n");
+      if(isEmpty(liste)==0){
+        while (tmp->suivant != NULL){ //la boucle affiche jusqu'a l'avant dernier produit (on ne rentre pas dans la boucle si 1 seul element)
+        printf("%d: %s, ",i, tmp->Name);
+        i++;
+        tmp = tmp->suivant;
+        }
+    printf("%d: %s\n",i, tmp->Name); //affichage du dernier produit
+      }
+      else
+        printf("liste vide :(\n");
+}
+
+void removeHead (Liste * liste){ //suppression du premier element de la liste (gestion dufferente d'un autre element de la liste)
+    Product* element = liste->premier;
+    liste->premier = liste->premier->suivant;
+    free(element); //on libere l'espace memoire du premier element de la liste qui a ete supprime
+
+}
+void removeBody (Liste *liste, int numToDelete){ //permet de supprimer un element qui n'est pas le premier élément de la liste
+Product *tmp1 = liste->premier; //va pointer sur l'avant dernier element
+Product *tmp2 = tmp1->suivant; // va pointer sur le dernier element de la liste
+int i = 0;
+if(numToDelete < liste->Size_Liste){
+    while(i < numToDelete-1){
+       tmp1 = tmp2;
+       tmp2 = tmp2 ->suivant;
+       i++;
+        }
+
+    tmp1->suivant = tmp2->suivant; //tmp1 ne pointe plus sur tmp2 mais sur l'element suivant, tmp2 va donc etre supprimé
+    free(tmp2); //on libere l'espace memoire alloue pour tmp2
+    }
+}
+void adjustPrice(Liste *liste){
+char choice[60];
+int var;
+display_list_products(liste);
+do{
+printf("Quel est le produit dont le prix est a ajuster?\n");
+scanf("%s", &choice[0]);
+}while (choice[0] < 48 || choice[0]> 57);
+var = atoi(choice);
+int i=0;
+Product * element = liste->premier;
+if(var < liste->Size_Liste){
+for(i;i<var; i++){
+    element = element->suivant;
+        }
+    printf("le prix courant est de: %d€\n Nouveau prix:", element->Price);
+    element->Price = set_Product_price();
+    }
+}
+
+void adjustMarketing (Liste *liste, int numProd, int price){ /* Permet d'investir dans la publicité. On rentre le prix et le produit.*/
+int i=0;
+Product* prod = liste->premier;
+if(((liste->Wallet) - price >= 0)&& (numProd < liste->Size_Liste)){
+    liste->Wallet -= price; //on soustrait le prix à son portefeuille
+    for(i=0; i< numProd; i++)
+    {
+        prod = prod->suivant;
+    }
+    printf("Le produit possedait un investissement de:%d€\n",prod->marketing);
+    prod->marketing += price;
+    printf("Le produit %d possede maintenant un investissement marketing de: %d€\n Il vous reste %d€ dans votre portefeuille\n", numProd, prod->marketing, liste->Wallet);
+}
+}
+
+void EndRound(Liste *listeadv){ /* tour de l'adversaire*/
+int randAction;
+do{
+    randAction = rand()%7;
+switch (randAction){
+    case 0: randomInsertion(listeadv);
+    printf("\n\n ---FIN ACTION--- \n\n");
+    system("pause");
+    break;
+    case 1: randomDelete(listeadv);
+    printf("\n\n ---FIN ACTION--- \n\n");
+    system("pause");
+    break;
+    case 2: randomAdjustPrice(listeadv);
+    printf("\n\n ---FIN ACTION--- \n\n");
+    system("pause");
+    break;
+}
+}while(randAction !=6); // si randAction == 6, on sort de la boucle et cela met fin au tour du joueur random (equivalent de fin tour pour le joueur
+printf("fin tour adversaire\n");
+system("pause");
+}
+Liste *RandomInitialisation (void){ /*initialisation de liste par produit random*/
+    Liste *liste = malloc(sizeof(*liste));
+    Product *produit = malloc(sizeof(*produit));
+    if (liste == NULL || produit == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+    char* ProdRandName [11];
+    char* ProdType[11];
+    int i=0;
+    for(i=0;i<10; i++){
+        ProdRandName[i] =generateurLettreAleatoire();
+        ProdType[i] =generateurLettreAleatoire();
+    }
+    ProdRandName[10] = '\0';
+    ProdType[10] = '\0';
+    i=0;
+
+//    produit->Name = ProdRandName;
+    for(i=0; i<10; i++){
+    produit->Name[i]= ProdRandName[i];
+    produit->Type[i] = ProdType[i];
+    }
+   //set_Product_Type(produit->Type);
+    int randGamme = rand()%3+1;
+    int randPrice = rand();
+
+    produit->Gamme = randGamme;
+    produit->Price =  randPrice;
+    printf("Vous avez donc lance le produit: %s de Type: %s dans la gamme: %d coutant: %d\n", produit->Name, produit->Type, produit->Gamme, produit->Price);
+    produit->suivant = NULL;
+    produit->marketing=0; /*marketing initialise a zero pour le produit insere*/
+    liste->premier = produit;
+    liste->Size_Liste =1;
+    liste->Wallet=100000;//l'adversaire possede lui aussi un portefeuille de 100000€
+    liste->appareilProductif=0;
+    system("pause");
+    return liste;
+}
+
+char generateurLettreAleatoire(){
+char randomLetter = (rand() % ('z' - 'a'+ 1)) + 'a';
+
+return randomLetter;
+}
+
+void randomInsertion(Liste* liste){
+/* Création du nouvel élément */
+    Product *newProduct = malloc(sizeof(*newProduct));
+    if (liste == NULL || newProduct == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+    printf("Un adversaire souhaite lancer un nouveau produit!\n");
+    /*Initialisation du nouveau produit à introduire à l'aide des fonctions d'initialisation:*/
+    char* ProdRandName [11];
+    char* ProdType[11];
+    int i=0;
+    for(i=0;i<10; i++){
+        ProdRandName[i] =generateurLettreAleatoire();
+        ProdType[i] =generateurLettreAleatoire();
+    }
+    ProdRandName[10] = '\0';
+    ProdType[10] = '\0';
+    i=0;
+    //printf("%s",ProdRandName);
+//    produit->Name = ProdRandName;
+    for(i=0; i<11; i++){
+    newProduct->Name[i]= ProdRandName[i];
+    newProduct->Type[i] = ProdType[i];
+    }
+    int randGamme = rand()%3+1;
+    int randPrice = rand();
+
+    newProduct->Gamme = randGamme;
+    newProduct->Price =  randPrice;
+    newProduct->marketing = 0;
+
+printf("L'adversaire a lance le produit: %s de Type: %s dans la gamme: %d coutant: %d\n\n", newProduct->Name, newProduct->Type, newProduct->Gamme, newProduct->Price);
+    /* Insertion de l'élément au début de la liste */
+    newProduct->suivant = liste->premier;
+    liste->premier = newProduct;
+    liste->Size_Liste+=1;
+}
+
+void randomDelete (Liste *liste){
+Product * element = liste->premier;
+char prodToDelete[60];
+int numProd = 0;
+int i=0;
+int random = 0;
+    if((liste->Size_Liste) > 1){ //la liste contient plus d'un produit
+    /*affichage des produits disponibles*/
+        display_list_products(liste);
+
+    /*on recupere le nom du produit a supprimer*/
+        printf("Suppression de produit par l'ordinateur...\n");
+        do{
+        printf("Numero du produit a supprimer:");
+        random = rand()%11;
+        printf("%d\n",random);
+
+        }while(random > liste->Size_Liste); /*On demande un nombre aléatoire entre zéro et onze. Tant que le nombre est supérieur à la taille de la liste on retire le nombre aléatoire*/
+       numProd = random;
+
+    if (numProd == 0){
+        removeHead(liste);
+        liste->Size_Liste -=1;
+        printf("taille Liste: %d\n", liste->Size_Liste);
+    display_list_products(liste);
+    }
+    else if (numProd<liste->Size_Liste){
+        removeBody(liste, numProd);
+        liste->Size_Liste -=1;
+        printf("Taille Liste: %d\n", liste->Size_Liste);
+        display_list_products(liste);
+    }
+    else
+        printf("Ordinateur n'a pas rentre un nombre correct !\n"); /*ce cas n'arrivera jamais*/
+
+    }
+    else //la liste contient un unique produit
+        printf("Ordinateur veut supprimer son seul produit sur le marche...\n");
+
+        system("pause");
+}
+
+void randomAdjustPrice(Liste *liste){
+int choice;
+
+display_list_products(liste);
+printf("Un adversaire ajuste le prix d'un de ses produits...\n");
+do{
+printf("Produit dont le prix est a ajuster:");
+choice = rand()%10; //l'ordinateur ne peut pas ajuster le prix d'un produit superieur a 10 pour eviter de rester trop longtemps dans la boucle
+printf("%d\n", choice);
+}while(choice >= liste->Size_Liste);
+
+int i=0;
+Product * element = liste->premier;
+if(choice < liste->Size_Liste){
+for(i;i<choice; i++){
+    element = element->suivant;
+        }
+    printf("le prix courant est de: %d€\n Nouveau prix: ", element->Price);
+    element->Price = rand();
+    printf("%d\n", element->Price);
+    }
+}
+void appareilProductif (Liste* liste, int prix){ /*Pour simplifier le programme, on considere que le joueur peut investir dans l'appareil productif non pas d'un produit mais de l'ensemble des produits.*/
+if(prix <= liste->Wallet){
+
+    liste->appareilProductif += prix;
+    liste->Wallet -= prix;
+    printf("Investissement dans l'appareil productif est maintenant de: %d€ (portefeuille: %d€)\n", liste->appareilProductif, liste->Wallet);
+
+    }
+else
+    printf("erreur operation impossible\n");
+}
